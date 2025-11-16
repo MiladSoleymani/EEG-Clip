@@ -53,23 +53,27 @@ class EEG_CLIP_4Class(nn.Module):
 
         # ATCNet configuration
         if atcnet_config is None:
-            atcnet_config = {
-                'num_windows': 3,
-                'conv_pool_size': 7,
-                'F1': 16,
-                'D': 2,
-                'tcn_kernel_size': 4,
-                'tcn_depth': 2
-            }
+            atcnet_config = {}
+
+        # Set default ATCNet parameters
+        atcnet_params = {
+            'in_channels': 1,
+            'embedding_dim': embedding_dim,
+            'num_electrodes': num_electrodes,
+            'chunk_size': chunk_size,
+            'num_windows': 3,
+            'conv_pool_size': 7,
+            'F1': 16,
+            'D': 2,
+            'tcn_kernel_size': 4,
+            'tcn_depth': 2
+        }
+
+        # Update with user-provided config
+        atcnet_params.update(atcnet_config)
 
         # EEG encoder - outputs embeddings directly
-        self.eeg_encoder = ATCNetDirectEmbedding(
-            in_channels=1,
-            embedding_dim=embedding_dim,
-            num_electrodes=num_electrodes,
-            chunk_size=chunk_size,
-            **atcnet_config
-        )
+        self.eeg_encoder = ATCNetDirectEmbedding(**atcnet_params)
 
         # Frozen text encoder
         self.text_encoder = FrozenTextEncoder(model_name=text_model)
