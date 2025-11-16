@@ -1,0 +1,21 @@
+# Experiment: K-Fold Cross-Validation with 4-Class Fixed
+
+experiment:
+  name: "eeg_clip_kfold_4class"
+
+model:
+  type: "4class_fixed"
+
+captions:
+  template_style: "motor_imagery"
+
+training:
+  max_epochs: 30
+  batch_size: 32
+
+validation:
+  strategy: "k_fold"
+  k_fold:
+    n_folds: 5
+    fold_strategy: "subject_wise"
+    current_fold: -1  # -1 means run all folds

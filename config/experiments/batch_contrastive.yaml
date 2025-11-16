@@ -1,0 +1,21 @@
+# Experiment: Batch-wise Contrastive Learning
+
+experiment:
+  name: "eeg_clip_batch_contrastive"
+
+model:
+  type: "batch_contrastive"
+
+captions:
+  template_style: "varied"
+
+training:
+  max_epochs: 50
+  batch_size: 32
+
+validation:
+  strategy: "train_test_split"
+  train_test_split:
+    test_subjects: ["subject1"]
+    val_subjects: []
+    val_split: 0.2

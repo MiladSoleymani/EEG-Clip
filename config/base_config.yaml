@@ -1,0 +1,129 @@
+# Base Configuration for EEG-CLIP Training
+
+# Experiment settings
+experiment:
+  name: "eeg_clip_experiment"
+  seed: 42
+  device: "auto"  # auto, cuda, cpu
+  num_workers: 4
+
+# Data settings
+data:
+  data_prefix: "/kaggle/input/high-gamma-dataset-fif/"
+  freq_band: [1, 100]
+  time_range: [0.0, 4.0]
+  remove_bad: true
+  scale: true
+  num_classes: 4
+  class_names: ["left hand", "right hand", "foot", "rest"]
+
+  # Subject files
+  subjects:
+    subject1:
+      - "Subject 1/0/0-raw.fif"
+      - "Subject 1/1/1-raw.fif"
+    subject2:
+      - "Subject 2/0/0-raw.fif"
+      - "Subject 2/1/1-raw.fif"
+    subject3:
+      - "Subject 3/0/0-raw.fif"
+      - "Subject 3/1/1-raw.fif"
+
+# Validation strategy
+validation:
+  strategy: "train_test_split"  # Options: "train_test_split", "k_fold"
+
+  # Train-test split settings
+  train_test_split:
+    test_subjects: ["subject1"]  # Subjects to use for testing
+    val_subjects: []  # If empty, use a portion of train subjects
+    val_split: 0.2  # Validation split from training data if val_subjects is empty
+
+  # K-fold settings
+  k_fold:
+    n_folds: 5
+    fold_strategy: "subject_wise"  # Options: "subject_wise", "trial_wise"
+    current_fold: 0  # Which fold to run (0 to n_folds-1, -1 for all)
+
+# Model settings
+model:
+  type: "4class_fixed"  # Options: "4class_fixed", "batch_contrastive"
+  num_electrodes: 50
+  chunk_size: 1001
+  embedding_dim: 384
+  temperature: 0.07
+  text_model: "all-MiniLM-L6-v2"  # Options: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
+
+  # ATCNet architecture
+  atcnet:
+    in_channels: 1
+    num_windows: 3
+    conv_pool_size: 7
+    F1: 16
+    D: 2
+    tcn_kernel_size: 4
+    tcn_depth: 2
+
+# Caption settings
+captions:
+  template_style: "motor_imagery"  # Options: "simple", "action_focused", "motor_imagery", "neural", "descriptive", "varied"
+
+# Training settings
+training:
+  max_epochs: 50
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 1.0e-4
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"  # Options: "cosine", "step", "reduce_on_plateau"
+    cosine:
+      T_max: 100
+      eta_min: 1.0e-6
+    step:
+      step_size: 10
+      gamma: 0.1
+    reduce_on_plateau:
+      mode: "max"
+      factor: 0.5
+      patience: 5
+      min_lr: 1.0e-6
+
+  # Early stopping
+  early_stopping:
+    enabled: true
+    monitor: "val_acc"
+    patience: 10
+    mode: "max"
+
+# Logging settings
+logging:
+  log_dir: "logs"
+  checkpoint_dir: "checkpoints"
+  save_top_k: 3
+  monitor: "val_acc"
+  mode: "max"
+  log_every_n_steps: 10
+
+  # Weights & Biases (optional)
+  wandb:
+    enabled: false
+    project: "eeg-clip"
+    entity: null
+
+# Evaluation settings
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "confusion_matrix"
+
+  save_predictions: true
+  save_embeddings: true
+  visualize_embeddings: true
+  tsne_samples: 200

@@ -1,0 +1,21 @@
+# Experiment: 4-Class Fixed Templates (Pre-computed embeddings)
+
+experiment:
+  name: "eeg_clip_4class_fixed"
+
+model:
+  type: "4class_fixed"
+
+captions:
+  template_style: "motor_imagery"
+
+training:
+  max_epochs: 50
+  batch_size: 32
+
+validation:
+  strategy: "train_test_split"
+  train_test_split:
+    test_subjects: ["subject1"]
+    val_subjects: []
+    val_split: 0.2
