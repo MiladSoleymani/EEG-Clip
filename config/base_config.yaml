@@ -28,6 +28,39 @@ data:
     subject3:
       - "Subject 3/0/0-raw.fif"
       - "Subject 3/1/1-raw.fif"
+    subject4:
+      - "Subject 4/0/0-raw.fif"
+      - "Subject 4/1/1-raw.fif"
+    subject5:
+      - "Subject 5/0/0-raw.fif"
+      - "Subject 5/1/1-raw.fif"
+    subject6:
+      - "Subject 6/0/0-raw.fif"
+      - "Subject 6/1/1-raw.fif"
+    subject7:
+      - "Subject 7/0/0-raw.fif"
+      - "Subject 7/1/1-raw.fif"
+    subject8:
+      - "Subject 8/0/0-raw.fif"
+      - "Subject 8/1/1-raw.fif"
+    subject9:
+      - "Subject 9/0/0-raw.fif"
+      - "Subject 9/1/1-raw.fif"
+    subject10:
+      - "Subject 10/0/0-raw.fif"
+      - "Subject 10/1/1-raw.fif"
+    subject11:
+      - "Subject 11/0/0-raw.fif"
+      - "Subject 11/1/1-raw.fif"
+    subject12:
+      - "Subject 12/0/0-raw.fif"
+      - "Subject 12/1/1-raw.fif"
+    subject13:
+      - "Subject 13/0/0-raw.fif"
+      - "Subject 13/1/1-raw.fif"
+    subject14:
+      - "Subject 14/0/0-raw.fif"
+      - "Subject 14/1/1-raw.fif"
 
 # Validation strategy
 validation:
@@ -36,7 +69,7 @@ validation:
   # Train-test split settings
   train_test_split:
     test_subjects: ["subject1"]  # Subjects to use for testing
-    val_subjects: []  # If empty, use a portion of train subjects
+    val_subjects: ["subject1"]  # If empty, use a portion of train subjects
     val_split: 0.2  # Validation split from training data if val_subjects is empty
 
   # K-fold settings
@@ -48,7 +81,7 @@ validation:
 # Model settings
 model:
   type: "4class_fixed"  # Options: "4class_fixed", "batch_contrastive"
-  num_electrodes: 50
+  num_electrodes: 5
   chunk_size: 1001
   embedding_dim: 384
   temperature: 0.07
@@ -95,7 +128,7 @@ training:
   # Early stopping
   early_stopping:
     enabled: false
-    monitor: "val_acc"
+    monitor: "train_acc"
     patience: 10
     mode: "max"
 
@@ -104,7 +137,7 @@ logging:
   log_dir: "logs"
   checkpoint_dir: "checkpoints"
   save_top_k: 3
-  monitor: "val_acc"
+  monitor: "train_acc_epoch"
   mode: "max"
   log_every_n_steps: 10
 

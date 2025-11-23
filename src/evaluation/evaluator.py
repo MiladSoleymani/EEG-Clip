@@ -88,6 +88,13 @@ class Evaluator:
         """Collect predictions and embeddings from all batches"""
         print("\nCollecting predictions...")
 
+        # Check if dataloader is empty
+        if len(self.dataloader) == 0:
+            raise ValueError(
+                "Dataloader is empty! No data to evaluate. "
+                "Please check that your validation dataset contains samples."
+            )
+
         with torch.no_grad():
             for batch_idx, (eeg_data, labels) in enumerate(self.dataloader):
                 eeg_data = eeg_data.to(self.device)
@@ -137,6 +144,13 @@ class Evaluator:
 
                 if (batch_idx + 1) % 10 == 0:
                     print(f"  Processed {batch_idx + 1}/{len(self.dataloader)} batches")
+
+        # Check if any predictions were collected
+        if len(self.all_preds) == 0:
+            raise ValueError(
+                "No predictions were collected! The dataloader loop did not execute. "
+                "Please check your dataset and dataloader configuration."
+            )
 
         # Concatenate all results
         self.all_preds = torch.cat(self.all_preds).numpy()
