@@ -65,7 +65,7 @@ class MultiSubjectECoGDataset(Dataset):
         raw = mne.io.read_raw_fif(file_path, preload=True, verbose=False)
 
         if self.remove_bad:
-            raw.pick_types(ecog=True, eeg=True, exclude='bads')
+            raw.pick(['ecog', 'eeg'], exclude='bads')
 
         # Apply bandpass filter
         if self.freq_band:
