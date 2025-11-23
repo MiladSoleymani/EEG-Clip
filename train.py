@@ -56,21 +56,21 @@ class MetricsHistoryCallback(Callback):
         # Get the logged metrics
         metrics = trainer.logged_metrics
 
-        # Extract train loss (try different possible names)
+        # Extract train loss (prioritize epoch-level)
         if 'train_loss_epoch' in metrics:
             self.train_loss.append(float(metrics['train_loss_epoch']))
         elif 'train_loss' in metrics:
             self.train_loss.append(float(metrics['train_loss']))
 
-        # Extract train accuracy (try different possible names)
+        # Extract train accuracy (prioritize unified 'train_acc')
         if 'train_acc_epoch' in metrics:
             self.train_acc.append(float(metrics['train_acc_epoch']))
-        elif 'train_acc_eeg' in metrics:
-            self.train_acc.append(float(metrics['train_acc_eeg']))
-        elif 'train_acc_retrieval' in metrics:
-            self.train_acc.append(float(metrics['train_acc_retrieval']))
         elif 'train_acc' in metrics:
             self.train_acc.append(float(metrics['train_acc']))
+        elif 'train_acc_retrieval' in metrics:
+            self.train_acc.append(float(metrics['train_acc_retrieval']))
+        elif 'train_acc_eeg' in metrics:
+            self.train_acc.append(float(metrics['train_acc_eeg']))
 
     def on_validation_epoch_end(self, trainer, pl_module):
         """Called at the end of validation epoch"""
@@ -81,13 +81,13 @@ class MetricsHistoryCallback(Callback):
         if 'val_loss' in metrics:
             self.val_loss.append(float(metrics['val_loss']))
 
-        # Extract validation accuracy (try different possible names)
+        # Extract validation accuracy (prioritize unified 'val_acc')
         if 'val_acc' in metrics:
             self.val_acc.append(float(metrics['val_acc']))
-        elif 'val_acc_eeg' in metrics:
-            self.val_acc.append(float(metrics['val_acc_eeg']))
         elif 'val_acc_class' in metrics:
             self.val_acc.append(float(metrics['val_acc_class']))
+        elif 'val_acc_eeg' in metrics:
+            self.val_acc.append(float(metrics['val_acc_eeg']))
 
 
 def setup_seed(seed: int):

@@ -102,7 +102,8 @@ class EEGCLIPTrainerBatch(pl.LightningModule):
 
         # Log metrics
         self.log('train_loss', loss, prog_bar=True, on_step=True, on_epoch=True)
-        self.log('train_acc_retrieval', acc_retrieval, prog_bar=True, on_step=False, on_epoch=True)
+        self.log('train_acc', acc_retrieval, prog_bar=True, on_step=True, on_epoch=True)  # Unified metric
+        self.log('train_acc_retrieval', acc_retrieval, on_step=False, on_epoch=True)
         self.log('train_acc_eeg', acc_eeg, on_step=False, on_epoch=True)
         self.log('train_acc_text', acc_text, on_step=False, on_epoch=True)
 
@@ -149,10 +150,11 @@ class EEGCLIPTrainerBatch(pl.LightningModule):
 
         # Log metrics
         self.log('val_loss', loss, prog_bar=True, on_epoch=True, sync_dist=True)
+        self.log('val_acc', acc_class, prog_bar=True, on_epoch=True, sync_dist=True)  # Unified metric (classification)
         self.log('val_acc_retrieval', acc_retrieval, on_epoch=True, sync_dist=True)
         self.log('val_acc_eeg', acc_eeg, on_epoch=True, sync_dist=True)
         self.log('val_acc_text', acc_text, on_epoch=True, sync_dist=True)
-        self.log('val_acc_class', acc_class, prog_bar=True, on_epoch=True, sync_dist=True)
+        self.log('val_acc_class', acc_class, on_epoch=True, sync_dist=True)
 
         return loss
 
