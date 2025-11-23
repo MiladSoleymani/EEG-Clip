@@ -20,13 +20,19 @@ def plot_confusion_matrix(
     Plot confusion matrix.
 
     Args:
-        confusion_matrix: Confusion matrix array
+        confusion_matrix: Confusion matrix array or list
         class_names: List of class names
         save_path: Path to save figure (optional)
         normalize: Whether to normalize the confusion matrix
         figsize: Figure size
     """
-    cm = confusion_matrix.copy()
+    # Convert to numpy array if it's a list
+    if isinstance(confusion_matrix, list):
+        cm_original = np.array(confusion_matrix)
+    else:
+        cm_original = confusion_matrix.copy()
+
+    cm = cm_original.copy()
 
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -54,7 +60,7 @@ def plot_confusion_matrix(
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             if normalize:
-                text = f'{cm[i, j]:.2f}\n({int(confusion_matrix[i, j])})'
+                text = f'{cm[i, j]:.2f}\n({int(cm_original[i, j])})'
             else:
                 text = f'{int(cm[i, j])}'
 

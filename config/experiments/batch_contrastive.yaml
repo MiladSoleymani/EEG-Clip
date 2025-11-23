@@ -10,7 +10,7 @@ captions:
   template_style: "varied"
 
 training:
-  max_epochs: 5
+  max_epochs: 10
   batch_size: 32
 
 validation:
