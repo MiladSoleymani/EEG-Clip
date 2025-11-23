@@ -56,22 +56,38 @@ class MetricsHistoryCallback(Callback):
         # Get the logged metrics
         metrics = trainer.logged_metrics
 
-        # Extract train metrics (using epoch-level metrics)
+        # Extract train loss (try different possible names)
         if 'train_loss_epoch' in metrics:
             self.train_loss.append(float(metrics['train_loss_epoch']))
+        elif 'train_loss' in metrics:
+            self.train_loss.append(float(metrics['train_loss']))
+
+        # Extract train accuracy (try different possible names)
         if 'train_acc_epoch' in metrics:
             self.train_acc.append(float(metrics['train_acc_epoch']))
+        elif 'train_acc_eeg' in metrics:
+            self.train_acc.append(float(metrics['train_acc_eeg']))
+        elif 'train_acc_retrieval' in metrics:
+            self.train_acc.append(float(metrics['train_acc_retrieval']))
+        elif 'train_acc' in metrics:
+            self.train_acc.append(float(metrics['train_acc']))
 
     def on_validation_epoch_end(self, trainer, pl_module):
         """Called at the end of validation epoch"""
         # Get the logged metrics
         metrics = trainer.logged_metrics
 
-        # Extract validation metrics
+        # Extract validation loss
         if 'val_loss' in metrics:
             self.val_loss.append(float(metrics['val_loss']))
+
+        # Extract validation accuracy (try different possible names)
         if 'val_acc' in metrics:
             self.val_acc.append(float(metrics['val_acc']))
+        elif 'val_acc_eeg' in metrics:
+            self.val_acc.append(float(metrics['val_acc_eeg']))
+        elif 'val_acc_class' in metrics:
+            self.val_acc.append(float(metrics['val_acc_class']))
 
 
 def setup_seed(seed: int):
@@ -136,10 +152,13 @@ def create_trainer(config, fold_idx=None):
 
     # Model checkpoint
     checkpoint_dir = os.path.join(config['logging']['checkpoint_dir'], exp_name)
+
+    # Create filename based on monitored metric
+    monitor_metric = config['logging']['monitor']
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
-        filename='epoch={epoch:02d}-train_acc={train_acc_epoch:.4f}',
-        monitor=config['logging']['monitor'],
+        filename=f'epoch={{epoch:02d}}-{monitor_metric}={{{monitor_metric}:.4f}}',
+        monitor=monitor_metric,
         mode=config['logging']['mode'],
         save_top_k=config['logging']['save_top_k'],
         auto_insert_metric_name=False
@@ -306,25 +325,36 @@ def train_single_fold(config, train_files, val_files, fold_idx=None):
     if config['evaluation']['visualize_training_curves']:
         print("\nGenerating training curves...")
 
-        # Check if we have both train and val metrics
-        if (len(metrics_callback.train_loss) > 0 and
-            len(metrics_callback.val_loss) > 0):
+        # Check if we have sufficient metrics
+        has_loss = len(metrics_callback.train_loss) > 0 and len(metrics_callback.val_loss) > 0
+        has_acc = len(metrics_callback.train_acc) > 0 and len(metrics_callback.val_acc) > 0
 
-            # Ensure lists are the same length (val might be shorter)
+        if has_loss and has_acc:
+            # Ensure all lists are the same length
             min_len = min(
                 len(metrics_callback.train_loss),
-                len(metrics_callback.val_loss)
+                len(metrics_callback.val_loss),
+                len(metrics_callback.train_acc),
+                len(metrics_callback.val_acc)
             )
 
-            plot_training_curves(
-                train_losses=metrics_callback.train_loss[:min_len],
-                val_losses=metrics_callback.val_loss[:min_len],
-                train_accs=metrics_callback.train_acc[:min_len],
-                val_accs=metrics_callback.val_acc[:min_len],
-                save_path=os.path.join(eval_dir, 'training_curves.png')
-            )
+            if min_len > 0:
+                plot_training_curves(
+                    train_losses=metrics_callback.train_loss[:min_len],
+                    val_losses=metrics_callback.val_loss[:min_len],
+                    train_accs=metrics_callback.train_acc[:min_len],
+                    val_accs=metrics_callback.val_acc[:min_len],
+                    save_path=os.path.join(eval_dir, 'training_curves.png')
+                )
+            else:
+                print("  Warning: No metrics collected for plotting training curves")
         else:
-            print("  Warning: Insufficient metrics data for plotting training curves")
+            missing = []
+            if not has_loss:
+                missing.append("loss metrics")
+            if not has_acc:
+                missing.append("accuracy metrics")
+            print(f"  Warning: Missing {', '.join(missing)} - skipping training curves plot")
 
     return {
         'val_acc': results['accuracy'],

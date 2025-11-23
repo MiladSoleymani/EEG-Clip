@@ -19,3 +19,7 @@ validation:
     test_subjects: ["subject1"]
     val_subjects: []
     val_split: 0.2
+
+logging:
+  monitor: "val_acc"
+  mode: "max"
