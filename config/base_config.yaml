@@ -94,7 +94,7 @@ training:
 
   # Early stopping
   early_stopping:
-    enabled: true
+    enabled: false
     monitor: "val_acc"
     patience: 10
     mode: "max"
