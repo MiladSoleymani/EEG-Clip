@@ -27,7 +27,8 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import (
     ModelCheckpoint,
     EarlyStopping,
-    LearningRateMonitor
+    LearningRateMonitor,
+    Callback
 )
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.utils.data import DataLoader
@@ -37,7 +38,40 @@ from src.utils.data_utils import create_data_splits, create_k_fold_splits, run_a
 from src.data import MultiSubjectECoGDataset
 from src.training import EEGCLIPTrainer4Class, EEGCLIPTrainerBatch
 from src.evaluation import Evaluator
-from src.utils.visualization import plot_confusion_matrix, plot_embeddings_tsne
+from src.utils.visualization import plot_confusion_matrix, plot_embeddings_tsne, plot_training_curves
+
+
+class MetricsHistoryCallback(Callback):
+    """Callback to collect training and validation metrics history"""
+
+    def __init__(self):
+        super().__init__()
+        self.train_loss = []
+        self.train_acc = []
+        self.val_loss = []
+        self.val_acc = []
+
+    def on_train_epoch_end(self, trainer, pl_module):
+        """Called at the end of training epoch"""
+        # Get the logged metrics
+        metrics = trainer.logged_metrics
+
+        # Extract train metrics (using epoch-level metrics)
+        if 'train_loss_epoch' in metrics:
+            self.train_loss.append(float(metrics['train_loss_epoch']))
+        if 'train_acc_epoch' in metrics:
+            self.train_acc.append(float(metrics['train_acc_epoch']))
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+        """Called at the end of validation epoch"""
+        # Get the logged metrics
+        metrics = trainer.logged_metrics
+
+        # Extract validation metrics
+        if 'val_loss' in metrics:
+            self.val_loss.append(float(metrics['val_loss']))
+        if 'val_acc' in metrics:
+            self.val_acc.append(float(metrics['val_acc']))
 
 
 def setup_seed(seed: int):
@@ -96,11 +130,15 @@ def create_trainer(config, fold_idx=None):
     # Callbacks
     callbacks = []
 
+    # Metrics history callback
+    metrics_callback = MetricsHistoryCallback()
+    callbacks.append(metrics_callback)
+
     # Model checkpoint
     checkpoint_dir = os.path.join(config['logging']['checkpoint_dir'], exp_name)
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
-        filename='epoch={epoch:02d}-val_acc={val_acc:.4f}',
+        filename='epoch={epoch:02d}-train_acc={train_acc_epoch:.4f}',
         monitor=config['logging']['monitor'],
         mode=config['logging']['mode'],
         save_top_k=config['logging']['save_top_k'],
@@ -145,7 +183,7 @@ def create_trainer(config, fold_idx=None):
         accumulate_grad_batches=config['training']['accumulate_grad_batches'],
     )
 
-    return trainer, checkpoint_callback
+    return trainer, checkpoint_callback, metrics_callback
 
 
 def create_model(config):
@@ -182,7 +220,7 @@ def train_single_fold(config, train_files, val_files, fold_idx=None):
 
     # Create trainer
     print("Setting up trainer...")
-    trainer, checkpoint_callback = create_trainer(config, fold_idx)
+    trainer, checkpoint_callback, metrics_callback = create_trainer(config, fold_idx)
 
     # Train
     print("\n" + "="*80)
@@ -263,6 +301,30 @@ def train_single_fold(config, train_files, val_files, fold_idx=None):
             save_path=os.path.join(eval_dir, 'embeddings_tsne.png'),
             num_samples=config['evaluation']['tsne_samples']
         )
+
+    # Plot training curves if enabled
+    if config['evaluation']['visualize_training_curves']:
+        print("\nGenerating training curves...")
+
+        # Check if we have both train and val metrics
+        if (len(metrics_callback.train_loss) > 0 and
+            len(metrics_callback.val_loss) > 0):
+
+            # Ensure lists are the same length (val might be shorter)
+            min_len = min(
+                len(metrics_callback.train_loss),
+                len(metrics_callback.val_loss)
+            )
+
+            plot_training_curves(
+                train_losses=metrics_callback.train_loss[:min_len],
+                val_losses=metrics_callback.val_loss[:min_len],
+                train_accs=metrics_callback.train_acc[:min_len],
+                val_accs=metrics_callback.val_acc[:min_len],
+                save_path=os.path.join(eval_dir, 'training_curves.png')
+            )
+        else:
+            print("  Warning: Insufficient metrics data for plotting training curves")
 
     return {
         'val_acc': results['accuracy'],

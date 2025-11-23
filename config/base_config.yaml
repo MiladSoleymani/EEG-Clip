@@ -159,4 +159,5 @@ evaluation:
   save_predictions: true
   save_embeddings: true
   visualize_embeddings: true
+  visualize_training_curves: true
   tsne_samples: 200

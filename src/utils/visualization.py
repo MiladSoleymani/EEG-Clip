@@ -216,9 +216,12 @@ def plot_training_curves(
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
-    # Accuracy curves
-    ax2.plot(epochs, train_accs, 'b-', label='Training Accuracy', linewidth=2)
-    ax2.plot(epochs, val_accs, 'r-', label='Validation Accuracy', linewidth=2)
+    # Accuracy curves (convert to percentages)
+    train_accs_pct = [acc * 100 for acc in train_accs]
+    val_accs_pct = [acc * 100 for acc in val_accs]
+
+    ax2.plot(epochs, train_accs_pct, 'b-', label='Training Accuracy', linewidth=2)
+    ax2.plot(epochs, val_accs_pct, 'r-', label='Validation Accuracy', linewidth=2)
     ax2.set_xlabel('Epoch', fontsize=12)
     ax2.set_ylabel('Accuracy (%)', fontsize=12)
     ax2.set_title('Training and Validation Accuracy', fontsize=14)
