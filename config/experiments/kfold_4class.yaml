@@ -17,5 +17,5 @@ validation:
   strategy: "k_fold"
   k_fold:
     n_folds: 5
-    fold_strategy: "subject_wise"
+    fold_strategy: "trial_wise" # "subject_wise"
     current_fold: -1  # -1 means run all folds
