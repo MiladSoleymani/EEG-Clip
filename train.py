@@ -34,7 +34,11 @@ from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.utils.data import DataLoader
 
 from src.utils.config import load_config, merge_configs, save_config
-from src.utils.data_utils import create_data_splits, create_k_fold_splits, run_all_folds
+from src.utils.data_utils import (
+    create_data_splits,
+    create_k_fold_splits,
+    run_all_folds
+)
 from src.data import MultiSubjectECoGDataset
 from src.training import EEGCLIPTrainer4Class, EEGCLIPTrainerBatch
 from src.evaluation import Evaluator
@@ -302,7 +306,7 @@ def train_single_fold(config, train_files, val_files, fold_idx=None):
             else:
                 from src.data import CaptionGenerator, ClassTemplates
                 template_style = config['captions']['template_style']
-                if template_style in ['simple', 'action_focused', 'motor_imagery', 'neural', 'descriptive']:
+                if template_style in ['simple', 'action_focused', 'descriptive']:
                     generator = ClassTemplates(template_style)
                     class_templates = generator.get_all_captions()
                 else:
@@ -438,6 +442,22 @@ def main(args):
             print(f"Fold {fold_idx} validation accuracy: {results['val_acc']*100:.2f}%")
             print(f"Best model saved to: {results['best_model_path']}")
             print("="*80)
+
+    elif val_strategy == 'session_wise':
+        # Session-wise split: train on session 0, test on session 1
+        print("\nUsing session-wise strategy")
+        train_files, val_files, test_files = create_data_splits(config, data_prefix)
+
+        # Train model
+        results = train_single_fold(config, train_files, val_files)
+
+        print("\n" + "="*80)
+        print("TRAINING COMPLETE")
+        print("="*80)
+        print(f"Final validation accuracy: {results['val_acc']*100:.2f}%")
+        print(f"Best model saved to: {results['best_model_path']}")
+        print(f"Test files available: {len(test_files)} (session 1 data)")
+        print("="*80)
 
     else:
         raise ValueError(f"Unknown validation strategy: {val_strategy}")

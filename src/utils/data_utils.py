@@ -28,6 +28,8 @@ def create_data_splits(
 
     if val_config['strategy'] == 'train_test_split':
         return _create_train_test_split(subjects, val_config, data_prefix)
+    elif val_config['strategy'] == 'session_wise':
+        return _create_session_wise_split(subjects, val_config, data_prefix)
     else:
         raise ValueError(
             f"Use create_k_fold_splits() for strategy: {val_config['strategy']}"
@@ -82,6 +84,75 @@ def _create_train_test_split(
     return train_files, val_files, test_files
 
 
+def _create_session_wise_split(
+    subjects: Dict[str, List[str]],
+    val_config: dict,
+    data_prefix: str
+) -> Tuple[List[str], List[str], List[str]]:
+    """
+    Create session-wise split: train on session 0, test on session 1.
+
+    All subjects are included, but split by session:
+    - Training: All subjects' session 0 data
+    - Test: All subjects' session 1 data
+
+    Args:
+        subjects: Dictionary mapping subject names to their file lists
+        val_config: Validation configuration
+        data_prefix: Prefix path for data files
+
+    Returns:
+        train_files: Files from train_session (session 0 by default)
+        val_files: Validation split from train_session
+        test_files: Files from test_session (session 1 by default)
+    """
+    session_config = val_config['session_wise']
+    train_session = session_config.get('train_session', 0)
+    test_session = session_config.get('test_session', 1)
+    val_split = session_config.get('val_split', 0.2)
+
+    train_files = []
+    test_files = []
+
+    for subject_name, subject_files in subjects.items():
+        # Each subject has multiple session files
+        # Files are like: "Subject 1/0/0-raw.fif", "Subject 1/1/1-raw.fif"
+        for idx, file_path in enumerate(subject_files):
+            full_path = f"{data_prefix}{file_path}"
+
+            # Determine session based on path pattern (e.g., "Subject 1/0/0-raw.fif")
+            if f"/{train_session}/" in file_path:
+                train_files.append(full_path)
+            elif f"/{test_session}/" in file_path:
+                test_files.append(full_path)
+            else:
+                # Fallback to index-based assignment
+                if idx == train_session:
+                    train_files.append(full_path)
+                elif idx == test_session:
+                    test_files.append(full_path)
+
+    # Split train into train/val
+    val_files = []
+    if val_split > 0 and len(train_files) > 1:
+        np.random.shuffle(train_files)
+        n_val = max(1, int(len(train_files) * val_split))
+        val_files = train_files[:n_val]
+        train_files = train_files[n_val:]
+
+    print("\n" + "="*80)
+    print("SESSION-WISE DATA SPLIT")
+    print("="*80)
+    print(f"Train session: {train_session}")
+    print(f"Test session:  {test_session}")
+    print(f"Training files:   {len(train_files)}")
+    print(f"Validation files: {len(val_files)}")
+    print(f"Test files:       {len(test_files)}")
+    print("="*80 + "\n")
+
+    return train_files, val_files, test_files
+
+
 def create_k_fold_splits(
     config: dict,
     data_prefix: str,
@@ -107,10 +178,6 @@ def create_k_fold_splits(
 
     if fold_strategy == 'subject_wise':
         return _create_subject_wise_kfold(
-            subjects, data_prefix, n_folds, fold_idx
-        )
-    elif fold_strategy == 'trial_wise':
-        return _create_trial_wise_kfold(
             subjects, data_prefix, n_folds, fold_idx
         )
     else:
@@ -163,40 +230,6 @@ def _create_subject_wise_kfold(
     print(f"Validation subjects: {val_subject_names}")
     print(f"Training files:      {len(train_files)}")
     print(f"Validation files:    {len(val_files)}")
-    print("="*80 + "\n")
-
-    return train_files, val_files
-
-
-def _create_trial_wise_kfold(
-    subjects: Dict[str, List[str]],
-    data_prefix: str,
-    n_folds: int,
-    fold_idx: int
-) -> Tuple[List[str], List[str]]:
-    """Create trial-wise k-fold splits"""
-    # Collect all files
-    all_files = []
-    for subject_files in subjects.values():
-        files = [f"{data_prefix}{f}" for f in subject_files]
-        all_files.extend(files)
-
-    # Create k-fold splitter
-    kf = KFold(n_splits=n_folds, shuffle=True, random_state=42)
-
-    # Get train/val file indices for this fold
-    splits = list(kf.split(all_files))
-    train_indices, val_indices = splits[fold_idx]
-
-    # Get files
-    train_files = [all_files[i] for i in train_indices]
-    val_files = [all_files[i] for i in val_indices]
-
-    print("\n" + "="*80)
-    print(f"K-FOLD SPLIT (Fold {fold_idx+1}/{n_folds}) - Trial-wise")
-    print("="*80)
-    print(f"Training files:   {len(train_files)}")
-    print(f"Validation files: {len(val_files)}")
     print("="*80 + "\n")
 
     return train_files, val_files
