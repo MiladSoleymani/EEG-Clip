@@ -174,12 +174,12 @@ validation:
     val_split: 0.2
   k_fold:
     n_folds: 5
-    fold_strategy: "subject_wise"  # or "trial_wise"
+    fold_strategy: "subject_wise"
 
 # Caption templates
 captions:
-  template_style: "motor_imagery"
-  # Options: "simple", "action_focused", "motor_imagery", "neural", "descriptive", "varied"
+  template_style: "action_focused"
+  # Options: "simple", "action_focused", "descriptive", "varied"
 ```
 
 ### Creating Custom Experiments

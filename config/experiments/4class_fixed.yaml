@@ -7,7 +7,7 @@ model:
   type: "4class_fixed"
 
 captions:
-  template_style: "motor_imagery"
+  template_style: "action_focused"
 
 training:
   max_epochs: 2

@@ -150,7 +150,7 @@ def main(args):
         else:
             from src.data import CaptionGenerator, ClassTemplates
             template_style = config['captions']['template_style']
-            if template_style in ['simple', 'action_focused', 'motor_imagery', 'neural', 'descriptive']:
+            if template_style in ['simple', 'action_focused', 'descriptive']:
                 generator = ClassTemplates(template_style)
                 class_templates = generator.get_all_captions()
             else:

@@ -26,18 +26,6 @@ class ClassTemplates:
             "foot movement",
             "resting state"
         ],
-        'motor_imagery': [
-            "imagining left hand movement",
-            "imagining right hand movement",
-            "imagining foot movement",
-            "no motor imagery"
-        ],
-        'neural': [
-            "brain activity during left hand motor imagery",
-            "brain activity during right hand motor imagery",
-            "brain activity during foot motor imagery",
-            "brain activity during rest"
-        ],
         'descriptive': [
             "person performing left hand grasping motion",
             "person performing right hand grasping motion",
@@ -46,15 +34,15 @@ class ClassTemplates:
         ]
     }
 
-    def __init__(self, template_style: str = 'motor_imagery'):
+    def __init__(self, template_style: str = 'action_focused'):
         """
         Args:
             template_style: Template style to use
-                Options: 'simple', 'action_focused', 'motor_imagery', 'neural', 'descriptive'
+                Options: 'simple', 'action_focused', 'descriptive'
         """
         if template_style not in self.TEMPLATE_STYLES:
-            print(f"Warning: Unknown template style '{template_style}', using 'motor_imagery'")
-            template_style = 'motor_imagery'
+            print(f"Warning: Unknown template style '{template_style}', using 'action_focused'")
+            template_style = 'action_focused'
 
         self.template_style = template_style
         self.templates = self.TEMPLATE_STYLES[template_style]
@@ -93,54 +81,54 @@ class CaptionGenerator:
             0: [
                 "left hand movement",
                 "moving left hand",
-                "left hand motor imagery",
-                "imagining left hand movement",
+                "performing left hand movement",
                 "left hand grasping motion",
-                "left hand activity"
+                "left hand action",
+                "executing left hand movement"
             ],
             1: [
                 "right hand movement",
                 "moving right hand",
-                "right hand motor imagery",
-                "imagining right hand movement",
+                "performing right hand movement",
                 "right hand grasping motion",
-                "right hand activity"
+                "right hand action",
+                "executing right hand movement"
             ],
             2: [
                 "foot movement",
                 "moving foot",
-                "foot motor imagery",
-                "imagining foot movement",
+                "performing foot movement",
                 "foot dorsiflexion",
-                "foot activity"
+                "foot action",
+                "executing foot movement"
             ],
             3: [
                 "resting state",
                 "no movement",
                 "rest",
                 "relaxed state",
-                "no motor imagery",
+                "no motor task",
                 "baseline activity"
             ]
         },
         'descriptive': {
             0: [
                 "person performing left hand grasping motion",
-                "brain activity during left hand motor imagery",
+                "brain activity during left hand movement",
                 "neural patterns of left hand movement",
                 "EEG signals from left hand task",
                 "cortical activity for left hand motion"
             ],
             1: [
                 "person performing right hand grasping motion",
-                "brain activity during right hand motor imagery",
+                "brain activity during right hand movement",
                 "neural patterns of right hand movement",
                 "EEG signals from right hand task",
                 "cortical activity for right hand motion"
             ],
             2: [
                 "person performing foot dorsiflexion movement",
-                "brain activity during foot motor imagery",
+                "brain activity during foot movement",
                 "neural patterns of foot movement",
                 "EEG signals from foot task",
                 "cortical activity for foot motion"

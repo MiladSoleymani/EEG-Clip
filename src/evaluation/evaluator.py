@@ -110,7 +110,7 @@ class Evaluator:
                         # Batch contrastive model - need class templates
                         from ..data import CaptionGenerator
                         template_style = self.model.config['captions']['template_style']
-                        if template_style in ['simple', 'action_focused', 'motor_imagery', 'neural', 'descriptive']:
+                        if template_style in ['simple', 'action_focused', 'descriptive']:
                             from ..data import ClassTemplates
                             generator = ClassTemplates(template_style)
                             class_templates = generator.get_all_captions()
